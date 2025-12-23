@@ -1,0 +1,7 @@
+{
+  "name": "Bếp bánh Mian - Smart Bakery Management V1",
+  "description": "A comprehensive bakery management system for both customers to track orders and owners to manage production, sales, and AI-driven customer outreach.",
+  "requestFramePermissions": [
+    "camera"
+  ]
+}
