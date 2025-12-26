@@ -22,7 +22,20 @@ export enum AdminScreen {
   EDIT_PRODUCT = 'EDIT_PRODUCT',
   AI_SALES = 'AI_SALES',
   REPORTS = 'REPORTS',
-  SETTINGS = 'SETTINGS'
+  SETTINGS = 'SETTINGS',
+  CHANGE_PASSWORD = 'CHANGE_PASSWORD',
+  CHAT_LIST = 'CHAT_LIST',
+  CHAT_DETAIL = 'CHAT_DETAIL'
+}
+
+export interface ChatMessage {
+  id: string;
+  senderId: string; // 'admin' or customer phone/id
+  senderName: string;
+  text: string;
+  time: string;
+  timestamp: number;
+  isRead: boolean;
 }
 
 export interface AdminSettings {
@@ -56,7 +69,7 @@ export interface Product {
   description: string;
   image: string;
   category: string;
-  targetQty: number; // Số lượng đủ cho 1 mẻ
+  targetQty: number;
   isBestSeller?: boolean;
   isNew?: boolean;
   videoUrl?: string;
@@ -64,36 +77,27 @@ export interface Product {
   reviews?: ProductReview[];
 }
 
+export interface OrderItem {
+  productName: string;
+  productImage: string;
+  price: number;
+  quantity: number;
+}
+
 export interface Order {
   id: string;
   customerName: string;
-  customerPhone?: string; // Số điện thoại khách
-  productName: string;
-  productImage: string;
+  customerPhone?: string;
+  items: OrderItem[];
   status: 'PENDING' | 'BAKING' | 'ROASTING' | 'DELIVERING' | 'COMPLETED';
   time: string;
-  price: number;
-  quantity: number;
+  totalPrice: number;
+  shippingFee?: number;
   notes?: string;
   address: string;
   date: string; 
   eta?: string;
   trackingLink?: string;
-}
-
-export interface CartItem {
-  productId: string;
-  quantity: number;
-}
-
-export interface Batch {
-  id: string;
-  name: string;
-  image: string;
-  currentOrders: number;
-  targetOrders: number;
-  status: string;
-  date: string;
 }
 
 export interface LoyalCustomer {

@@ -1,11 +1,12 @@
 
-import { Product, Order } from './types';
+import { Product, Order, ChatMessage } from './types';
 
 const DB_NAME = 'MianBakeryDB';
-const DB_VERSION = 1;
+const DB_VERSION = 2; // Incremented version
 const STORES = {
   PRODUCTS: 'products',
-  ORDERS: 'orders'
+  ORDERS: 'orders',
+  MESSAGES: 'messages'
 };
 
 const openDB = (): Promise<IDBDatabase> => {
@@ -18,6 +19,9 @@ const openDB = (): Promise<IDBDatabase> => {
       }
       if (!db.objectStoreNames.contains(STORES.ORDERS)) {
         db.createObjectStore(STORES.ORDERS, { keyPath: 'id' });
+      }
+      if (!db.objectStoreNames.contains(STORES.MESSAGES)) {
+        db.createObjectStore(STORES.MESSAGES, { keyPath: 'id' });
       }
     };
     request.onsuccess = () => resolve(request.result);
@@ -62,5 +66,37 @@ export const storage = {
     const db = await openDB();
     const transaction = db.transaction(STORES.ORDERS, 'readwrite');
     transaction.objectStore(STORES.ORDERS).put(order);
+  },
+
+  async getMessages(): Promise<ChatMessage[]> {
+    const db = await openDB();
+    return new Promise((resolve) => {
+      const transaction = db.transaction(STORES.MESSAGES, 'readonly');
+      const store = transaction.objectStore(STORES.MESSAGES);
+      const request = store.getAll();
+      request.onsuccess = () => resolve(request.result);
+    });
+  },
+
+  async saveMessage(msg: ChatMessage): Promise<void> {
+    const db = await openDB();
+    const transaction = db.transaction(STORES.MESSAGES, 'readwrite');
+    transaction.objectStore(STORES.MESSAGES).put(msg);
+  },
+
+  async markAllReadForSender(senderId: string): Promise<void> {
+    const db = await openDB();
+    const transaction = db.transaction(STORES.MESSAGES, 'readwrite');
+    const store = transaction.objectStore(STORES.MESSAGES);
+    const request = store.getAll();
+    request.onsuccess = () => {
+      const msgs: ChatMessage[] = request.result;
+      msgs.forEach(m => {
+        if (m.senderId === senderId && !m.isRead) {
+          m.isRead = true;
+          store.put(m);
+        }
+      });
+    };
   }
 };

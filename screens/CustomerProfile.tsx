@@ -7,25 +7,10 @@ interface Props {
   setUserProfile: (p: UserProfile) => void;
   onNavigate: (s: CustomerScreen) => void;
   onLogout: () => void;
+  orders: Order[];
 }
 
-const ORDER_HISTORY: Order[] = [
-  {
-    id: '#DH0301',
-    customerName: 'Minh Anh',
-    productName: 'Combo Sáng: Croissant & Cà phê',
-    productImage: 'https://lh3.googleusercontent.com/aida-public/AB6AXuB-tm9EpISsdvBShohCG49D1hfssszX9zEjaBzDey9ugy9hhE3drsoSV9LVCHP3Gydlcn1qbBDdFnrUznkzrhWPss1yREatWrbWet2gVZmGNKYSxwT5djof6m67XgBhBkmJXNu5lf-ZwuPA9-mFECrEzEBj11WucDegUvWD0lQX_W0GXgY19VrNkBHkh_Lf9qzdj89J80JwbreEyQVuQovNKHARdQZcUsDqJG5Z94eUwTX7s7-1PHtpiB9L1uWLKYcIqLHcjT1qxa8',
-    status: 'COMPLETED',
-    time: '85.000đ',
-    price: 85000,
-    quantity: 1,
-    // Fix: Added missing address property to match Order interface
-    address: '123 Đường Lê Lợi, Quận 1, TP.HCM',
-    date: '2024-12-20'
-  }
-];
-
-const CustomerProfileScreen: React.FC<Props> = ({ userProfile, setUserProfile, onNavigate, onLogout }) => {
+const CustomerProfileScreen: React.FC<Props> = ({ userProfile, setUserProfile, onNavigate, onLogout, orders }) => {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [showHistory, setShowHistory] = React.useState(false);
 
@@ -55,6 +40,9 @@ const CustomerProfileScreen: React.FC<Props> = ({ userProfile, setUserProfile, o
       reader.readAsDataURL(file);
     }
   };
+
+  // Lọc các đơn hàng hoàn tất của người dùng này
+  const completedOrders = orders.filter(o => o.status === 'COMPLETED' || o.status === 'DELIVERING');
 
   return (
     <div className="pb-32 bg-background-light dark:bg-zinc-950 min-h-screen">
@@ -168,26 +156,46 @@ const CustomerProfileScreen: React.FC<Props> = ({ userProfile, setUserProfile, o
           </div>
         </section>
 
-        {/* Lịch sử đặt bánh */}
+        {/* Lịch sử đặt bánh thực tế */}
         <section className="bg-white dark:bg-zinc-900 rounded-3xl p-6 shadow-soft border dark:border-zinc-800">
           <button onClick={() => setShowHistory(!showHistory)} className="w-full flex items-center justify-between">
-            <h3 className="text-sm font-bold uppercase text-text-secondary">Lịch sử đặt bánh</h3>
+            <h3 className="text-sm font-bold uppercase text-text-secondary">Lịch sử mua hàng ({completedOrders.length})</h3>
             <span className="material-symbols-outlined text-text-secondary transition-transform" style={{ transform: showHistory ? 'rotate(180deg)' : 'none' }}>expand_more</span>
           </button>
           
           {showHistory && (
             <div className="mt-4 flex flex-col gap-4 animate-in fade-in slide-in-from-top-2">
-              {ORDER_HISTORY.map(order => (
-                <div key={order.id} className="flex gap-3 items-center p-2 rounded-xl bg-gray-50 dark:bg-zinc-800">
-                  <img src={order.productImage} className="size-12 rounded-lg object-cover" />
-                  <div className="flex-1 min-w-0">
-                    <p className="text-[10px] font-bold text-text-secondary">{order.date}</p>
-                    <p className="text-xs font-bold truncate">{order.productName}</p>
-                    <p className="text-[10px] font-bold text-primary">{order.price.toLocaleString()}đ</p>
+              {completedOrders.length > 0 ? (
+                completedOrders.map(order => (
+                  <div key={order.id} className="p-3 rounded-xl bg-gray-50 dark:bg-zinc-800 border border-black/5">
+                    <div className="flex justify-between items-start mb-2">
+                       <p className="text-[10px] font-bold text-text-secondary">{order.date} • {order.id}</p>
+                       <span className={`text-[8px] px-1.5 py-0.5 rounded-full font-bold ${order.status === 'COMPLETED' ? 'bg-green-100 text-green-700' : 'bg-blue-100 text-blue-700'}`}>
+                         {order.status === 'COMPLETED' ? 'HOÀN TẤT' : 'ĐANG GIAO'}
+                       </span>
+                    </div>
+                    <div className="space-y-2">
+                      {order.items.map((item, idx) => (
+                        <div key={idx} className="flex gap-3 items-center">
+                          <img src={item.productImage} className="size-10 rounded-lg object-cover" />
+                          <div className="flex-1 min-w-0">
+                            <p className="text-xs font-bold truncate">{item.productName}</p>
+                            <p className="text-[10px] font-medium text-text-secondary">SL: {item.quantity}</p>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                    <div className="mt-3 pt-2 border-t border-dashed border-gray-200 flex justify-between items-center">
+                      <span className="text-[10px] font-black uppercase text-text-secondary">Tổng thanh toán</span>
+                      <p className="text-xs font-black text-primary">{order.totalPrice.toLocaleString()}đ</p>
+                    </div>
                   </div>
-                  <span className="text-[8px] bg-green-100 text-green-700 px-1.5 py-0.5 rounded-full font-bold">HOÀN TẤT</span>
+                ))
+              ) : (
+                <div className="py-8 text-center">
+                  <p className="text-xs text-text-secondary italic">Bạn chưa có đơn hàng nào hoàn tất.</p>
                 </div>
-              ))}
+              )}
             </div>
           )}
         </section>
